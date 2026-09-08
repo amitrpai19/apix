@@ -1,11 +1,11 @@
-# Render Blueprint: APIx-India (FastAPI + PostgreSQL)
+# Render Blueprint: APIx-India (FastAPI + PostgreSQL + React Frontend)
 # Deploy with 1-click on https://render.com
 services:
   # 1. Python FastAPI Backend Service
   - type: web
     name: apix-fastapi-backend
-    env: python
-    region: singapore # Close to India (low latency for DGCA / Indian airline servers)
+    runtime: python
+    region: singapore # Low latency for DGCA / Indian airline servers
     plan: free
     buildCommand: "pip install -r backend/requirements.txt && playwright install chromium --with-deps 2>/dev/null || true"
     startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
@@ -22,11 +22,10 @@ services:
         value: "*"
     healthCheckPath: /api/v1/health
 
-  # 2. React Vite Frontend Web Application
+  # 2. React Vite Frontend Web Application (Static Site)
   - type: web
     name: apix-frontend
-    env: static
-    plan: free
+    runtime: static
     buildCommand: "npm install && npm run build"
     staticPublishPath: ./dist
     routes:
@@ -38,10 +37,10 @@ services:
         value: "https://apix-fastapi-backend.onrender.com"
 
 databases:
-  # 2. Managed PostgreSQL Database for Time-Series Fare Storage
+  # 3. Managed PostgreSQL Database for Time-Series Fare Storage
   - name: apix-postgres
     databaseName: apix_india
     user: apix_admin
     region: singapore
     plan: free
-    ipAllowList: [] # Allow all Render services within private network
+    ipAllowList: [] # Private network access across Render services

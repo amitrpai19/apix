@@ -11,7 +11,13 @@ import {
   FileCode, 
   ExternalLink, 
   Terminal, 
-  Layers 
+  Layers,
+  AlertTriangle,
+  Play,
+  RefreshCw,
+  Globe,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { RouteBasket } from '../types/apix';
 
@@ -25,6 +31,53 @@ export const ApiAndRenderView: React.FC<ApiAndRenderViewProps> = ({ routes, head
   const [apiResponse, setApiResponse] = useState<string>('');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [activeCodeFile, setActiveCodeFile] = useState<'render_yaml' | 'main_py' | 'schema_sql' | 'cdp_py' | 'selenium_py'>('render_yaml');
+  
+  // Render deployment diagnostics state
+  const [renderUrl, setRenderUrl] = useState<string>('https://apix-fastapi-backend.onrender.com');
+  const [pingStatus, setPingStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'not_found'>('idle');
+  const [pingResult, setPingResult] = useState<any>(null);
+  const [pingError, setPingError] = useState<string>('');
+
+  const handlePingLive = async (path: string = '/api/v1/health') => {
+    setPingStatus('loading');
+    setPingError('');
+    setPingResult(null);
+    const target = renderUrl.replace(/\/+$/, '') + path;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const res = await fetch(target, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      const contentType = res.headers.get('content-type') || '';
+      let body: any;
+      if (contentType.includes('application/json')) {
+        body = await res.json();
+      } else {
+        body = await res.text();
+      }
+      
+      if (res.status === 404) {
+        setPingStatus('not_found');
+        setPingError(`HTTP 404 Not Found at ${path}`);
+        setPingResult(body);
+      } else if (res.ok) {
+        setPingStatus('success');
+        setPingResult(body);
+      } else {
+        setPingStatus('error');
+        setPingError(`HTTP ${res.status} ${res.statusText}`);
+        setPingResult(body);
+      }
+    } catch (err: any) {
+      setPingStatus('error');
+      if (err.name === 'AbortError') {
+        setPingError('Request timed out (12s). If on Render free tier, the container is waking up from idle sleep (takes ~45s).');
+      } else {
+        setPingError(`Network or CORS check: ${err.message || 'Service offline or blocked'}`);
+      }
+    }
+  };
 
   // Copy helper
   const handleCopy = (key: string, text: string) => {
@@ -116,13 +169,13 @@ export const ApiAndRenderView: React.FC<ApiAndRenderViewProps> = ({ routes, head
     URL.revokeObjectURL(url);
   };
 
-  const renderYamlContent = `# Render Blueprint: APIx-India (FastAPI + PostgreSQL)
+  const renderYamlContent = `# Render Blueprint: APIx-India (FastAPI + PostgreSQL + React Frontend)
 # Deploy with 1-click on https://render.com
 services:
   # 1. Python FastAPI Backend Service
   - type: web
     name: apix-fastapi-backend
-    env: python
+    runtime: python
     region: singapore # Close to India
     plan: free
     buildCommand: "pip install -r backend/requirements.txt && playwright install chromium --with-deps 2>/dev/null || true"
@@ -136,10 +189,26 @@ services:
         value: "1"
       - key: ENVIRONMENT
         value: production
+      - key: ALLOWED_ORIGINS
+        value: "*"
     healthCheckPath: /api/v1/health
 
+  # 2. React Vite Frontend Web Application (Static Site)
+  - type: web
+    name: apix-frontend
+    runtime: static
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_BACKEND_URL
+        value: "https://apix-fastapi-backend.onrender.com"
+
 databases:
-  # 2. Managed PostgreSQL Database for Time-Series Fare Storage
+  # 3. Managed PostgreSQL Database for Time-Series Fare Storage
   - name: apix-postgres
     databaseName: apix_india
     user: apix_admin
@@ -147,7 +216,8 @@ databases:
     plan: free
     ipAllowList: []`;
 
-  const mainPyContent = `from fastapi import FastAPI, Query
+  const mainPyContent = `from fastapi import FastAPI, Query, Request
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from .models import BasketRoute, RawFareQuote
@@ -160,6 +230,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def root(request: Request):
+    # Returns institutional HTML Gateway or JSON metadata (resolves 404 Not Found on root /)
+    return {
+        "status": "online",
+        "service": "APIx-India FastAPI Backend",
+        "docs": "/docs",
+        "endpoints": {
+            "health": "/api/v1/health",
+            "headline": "/api/v1/apix/headline",
+            "routes": "/api/v1/apix/routes/{route_id}",
+            "decomposition": "/api/v1/apix/decomposition",
+            "export": "/api/v1/export/cpi-transport-subgroup"
+        }
+    }
 
 @app.get("/api/v1/health")
 def health_check():
@@ -285,6 +371,135 @@ class SeleniumFlightScraper:
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Troubleshooting & Live Render Status Box */}
+      <div className="bg-amber-50/70 border border-amber-300/80 rounded-xl p-5 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0" />
+              <h3 className="text-sm font-bold text-amber-950">
+                Fix for &quot;NOT FOUND&quot; at https://apix-fastapi-backend.onrender.com/
+              </h3>
+              <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full uppercase">
+                Diagnostic &amp; Fix Applied
+              </span>
+            </div>
+            
+            <p className="text-xs text-amber-900/90 leading-relaxed max-w-3xl">
+              When visiting the base URL in FastAPI, an unhandled root path returns{' '}
+              <code className="bg-amber-100 px-1.5 py-0.5 rounded font-mono text-[11px] font-bold text-amber-950">
+                {`{"detail":"Not Found"}`}
+              </code>{' '}
+              because FastAPI does not serve a default index page. We have now implemented the root{' '}
+              <code className="bg-amber-100 px-1.5 py-0.5 rounded font-mono text-[11px] font-bold text-amber-950">
+                @app.get(&quot;/&quot;)
+              </code>{' '}
+              route returning an institutional Gateway dashboard and JSON response.
+            </p>
+
+            {/* Checklist of what to check on Render */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+              <div className="bg-white/80 border border-amber-200 p-2.5 rounded-lg text-xs">
+                <span className="font-bold text-slate-900 block mb-0.5">1. Check FastAPI Endpoints</span>
+                <span className="text-slate-600 text-[11px]">
+                  The live Swagger documentation is located at <code className="text-blue-700 font-mono">/docs</code>, and the heartbeat is at <code className="text-blue-700 font-mono">/api/v1/health</code>.
+                </span>
+              </div>
+              <div className="bg-white/80 border border-amber-200 p-2.5 rounded-lg text-xs">
+                <span className="font-bold text-slate-900 block mb-0.5">2. Render Free Tier Wake-up</span>
+                <span className="text-slate-600 text-[11px]">
+                  Free instances spin down after 15m of inactivity. The first request takes ~40-50s to cold start the container.
+                </span>
+              </div>
+              <div className="bg-white/80 border border-amber-200 p-2.5 rounded-lg text-xs">
+                <span className="font-bold text-slate-900 block mb-0.5">3. Render Service Name</span>
+                <span className="text-slate-600 text-[11px]">
+                  Verify in your Render Dashboard that your service is deployed and check the exact URL under your service name.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Live URL Tester & Quick Launch Links */}
+        <div className="mt-4 pt-4 border-t border-amber-200/80 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="relative flex-1">
+              <Globe className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={renderUrl}
+                onChange={(e) => setRenderUrl(e.target.value)}
+                placeholder="https://apix-fastapi-backend.onrender.com"
+                className="w-full pl-9 pr-3 py-1.5 text-xs font-mono bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+            <button
+              onClick={() => handlePingLive('/api/v1/health')}
+              disabled={pingStatus === 'loading'}
+              className="flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors shadow-xs shrink-0"
+            >
+              {pingStatus === 'loading' ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  Testing...
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5" />
+                  Ping Health
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <a
+              href={`${renderUrl.replace(/\/+$/, '')}/docs`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-colors"
+            >
+              Open /docs (Swagger) <ExternalLink className="w-3 h-3" />
+            </a>
+            <a
+              href={`${renderUrl.replace(/\/+$/, '')}/api/v1/health`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[11px] font-bold transition-colors"
+            >
+              Open /api/v1/health <ExternalLink className="w-3 h-3" />
+            </a>
+            <a
+              href={`${renderUrl.replace(/\/+$/, '')}/`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-[11px] font-bold transition-colors"
+            >
+              Open / (Root) <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+
+        {/* Ping status output if tested */}
+        {pingStatus !== 'idle' && (
+          <div className="mt-3 p-3 rounded-lg bg-white border border-slate-200 text-xs">
+            <div className="flex items-center gap-2 font-bold mb-1">
+              {pingStatus === 'loading' && <span className="text-amber-700 flex items-center gap-1"><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Querying remote Render service...</span>}
+              {pingStatus === 'success' && <span className="text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Remote Service Online (200 OK)</span>}
+              {pingStatus === 'not_found' && <span className="text-amber-800 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" /> Service responded with 404 Not Found</span>}
+              {pingStatus === 'error' && <span className="text-rose-700 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" /> Connection Check</span>}
+            </div>
+            {pingError && <p className="text-[11px] text-slate-700 font-mono mb-1">{pingError}</p>}
+            {pingResult && (
+              <pre className="mt-1 p-2 rounded bg-slate-900 text-emerald-300 font-mono text-[10px] overflow-x-auto max-h-32">
+                {typeof pingResult === 'string' ? pingResult : JSON.stringify(pingResult, null, 2)}
+              </pre>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Two Columns: Section 1 = Interactive API Explorer; Section 2 = Render Blueprint & Codebase */}
