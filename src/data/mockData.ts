@@ -1,0 +1,292 @@
+import { RouteBasket, FareQuote, ApixTimeSeriesPoint, LeadWindowElasticity, FactorDecomposition } from '../types/apix';
+
+export const INITIAL_ROUTES: RouteBasket[] = [
+  {
+    route_id: 'DEL-BOM',
+    origin_iata: 'DEL',
+    origin_city: 'Delhi',
+    destination_iata: 'BOM',
+    destination_city: 'Mumbai',
+    distance_km: 1148,
+    monthly_pax_volume: 620000,
+    flight_departures: 3100,
+    rpkm_value: 711760000,
+    route_weight: 0.1652,
+    base_price_p0: 5420,
+    current_price: 6280,
+    route_apix: 115.87,
+    category: 'Metro-Metro'
+  },
+  {
+    route_id: 'BLR-DEL',
+    origin_iata: 'BLR',
+    origin_city: 'Bengaluru',
+    destination_iata: 'DEL',
+    destination_city: 'Delhi',
+    distance_km: 1740,
+    monthly_pax_volume: 395000,
+    flight_departures: 1950,
+    rpkm_value: 687300000,
+    route_weight: 0.1595,
+    base_price_p0: 6650,
+    current_price: 7540,
+    route_apix: 113.38,
+    category: 'Metro-Metro'
+  },
+  {
+    route_id: 'BOM-DEL',
+    origin_iata: 'BOM',
+    origin_city: 'Mumbai',
+    destination_iata: 'DEL',
+    destination_city: 'Delhi',
+    distance_km: 1148,
+    monthly_pax_volume: 615000,
+    flight_departures: 3080,
+    rpkm_value: 706020000,
+    route_weight: 0.1638,
+    base_price_p0: 5390,
+    current_price: 6210,
+    route_apix: 115.21,
+    category: 'Metro-Metro'
+  },
+  {
+    route_id: 'DEL-CCU',
+    origin_iata: 'DEL',
+    origin_city: 'Delhi',
+    destination_iata: 'CCU',
+    destination_city: 'Kolkata',
+    distance_km: 1305,
+    monthly_pax_volume: 290000,
+    flight_departures: 1550,
+    rpkm_value: 378450000,
+    route_weight: 0.0878,
+    base_price_p0: 5820,
+    current_price: 6630,
+    route_apix: 113.92,
+    category: 'Metro-Metro'
+  },
+  {
+    route_id: 'BOM-BLR',
+    origin_iata: 'BOM',
+    origin_city: 'Mumbai',
+    destination_iata: 'BLR',
+    destination_city: 'Bengaluru',
+    distance_km: 842,
+    monthly_pax_volume: 340000,
+    flight_departures: 2100,
+    rpkm_value: 286280000,
+    route_weight: 0.0664,
+    base_price_p0: 4120,
+    current_price: 4780,
+    route_apix: 116.02,
+    category: 'Metro-Metro'
+  },
+  {
+    route_id: 'MAA-DEL',
+    origin_iata: 'MAA',
+    origin_city: 'Chennai',
+    destination_iata: 'DEL',
+    destination_city: 'Delhi',
+    distance_km: 1760,
+    monthly_pax_volume: 280000,
+    flight_departures: 1400,
+    rpkm_value: 492800000,
+    route_weight: 0.1144,
+    base_price_p0: 6490,
+    current_price: 7390,
+    route_apix: 113.87,
+    category: 'Metro-Metro'
+  },
+  {
+    route_id: 'BLR-HYD',
+    origin_iata: 'BLR',
+    origin_city: 'Bengaluru',
+    destination_iata: 'HYD',
+    destination_city: 'Hyderabad',
+    distance_km: 500,
+    monthly_pax_volume: 220000,
+    flight_departures: 1600,
+    rpkm_value: 110000000,
+    route_weight: 0.0255,
+    base_price_p0: 3250,
+    current_price: 3680,
+    route_apix: 113.23,
+    category: 'Metro-Tier2'
+  },
+  {
+    route_id: 'DEL-PAT',
+    origin_iata: 'DEL',
+    origin_city: 'Delhi',
+    destination_iata: 'PAT',
+    destination_city: 'Patna',
+    distance_km: 850,
+    monthly_pax_volume: 210000,
+    flight_departures: 1250,
+    rpkm_value: 178500000,
+    route_weight: 0.0414,
+    base_price_p0: 4400,
+    current_price: 5280,
+    route_apix: 120.00,
+    category: 'Metro-Tier2'
+  }
+];
+
+export const INITIAL_TIME_SERIES: ApixTimeSeriesPoint[] = [
+  { date: 'Aug 10', apix: 109.8, cpi_transport_baseline: 108.2, dgca_monthly_yield: 109.2, atf_fuel_index: 104.1 },
+  { date: 'Aug 12', apix: 110.2, cpi_transport_baseline: 108.3, dgca_monthly_yield: 109.6, atf_fuel_index: 104.2 },
+  { date: 'Aug 14', apix: 110.9, cpi_transport_baseline: 108.4, dgca_monthly_yield: 110.1, atf_fuel_index: 104.5, event: 'Independence Day Surge' },
+  { date: 'Aug 16', apix: 112.4, cpi_transport_baseline: 108.5, dgca_monthly_yield: 111.4, atf_fuel_index: 104.5 },
+  { date: 'Aug 18', apix: 111.8, cpi_transport_baseline: 108.6, dgca_monthly_yield: 111.0, atf_fuel_index: 104.8 },
+  { date: 'Aug 20', apix: 111.2, cpi_transport_baseline: 108.7, dgca_monthly_yield: 110.8, atf_fuel_index: 105.0 },
+  { date: 'Aug 22', apix: 111.5, cpi_transport_baseline: 108.8, dgca_monthly_yield: 111.1, atf_fuel_index: 105.1 },
+  { date: 'Aug 24', apix: 112.1, cpi_transport_baseline: 108.9, dgca_monthly_yield: 111.7, atf_fuel_index: 105.3 },
+  { date: 'Aug 26', apix: 112.0, cpi_transport_baseline: 109.0, dgca_monthly_yield: 111.6, atf_fuel_index: 105.4, event: 'Janmashtami Pre-booking' },
+  { date: 'Aug 28', apix: 112.6, cpi_transport_baseline: 109.1, dgca_monthly_yield: 112.1, atf_fuel_index: 105.9 },
+  { date: 'Aug 30', apix: 112.8, cpi_transport_baseline: 109.2, dgca_monthly_yield: 112.3, atf_fuel_index: 106.0 },
+  { date: 'Sep 01', apix: 113.5, cpi_transport_baseline: 109.3, dgca_monthly_yield: 112.9, atf_fuel_index: 107.5, event: 'IOCL Monthly ATF Hike (+2.8%)' },
+  { date: 'Sep 03', apix: 113.9, cpi_transport_baseline: 109.4, dgca_monthly_yield: 113.2, atf_fuel_index: 107.5 },
+  { date: 'Sep 05', apix: 114.2, cpi_transport_baseline: 109.5, dgca_monthly_yield: 113.6, atf_fuel_index: 107.6 },
+  { date: 'Sep 07', apix: 114.6, cpi_transport_baseline: 109.6, dgca_monthly_yield: 114.0, atf_fuel_index: 107.6 },
+  { date: 'Sep 08', apix: 114.82, cpi_transport_baseline: 109.7, dgca_monthly_yield: 114.2, atf_fuel_index: 107.7, event: 'Today (Live)' }
+];
+
+export const INITIAL_ELASTICITY: LeadWindowElasticity[] = [
+  {
+    lead_window: 'T+1',
+    lead_days: 1,
+    empirical_weight_beta: 0.15,
+    avg_fare: 9280,
+    surge_multiplier: 1.48,
+    rationale: 'Last-minute corporate urgency & emergency travel'
+  },
+  {
+    lead_window: 'T+7',
+    lead_days: 7,
+    empirical_weight_beta: 0.30,
+    avg_fare: 7650,
+    surge_multiplier: 1.22,
+    rationale: 'Peak short-term domestic business & leisure clustering'
+  },
+  {
+    lead_window: 'T+15',
+    lead_days: 15,
+    empirical_weight_beta: 0.30,
+    avg_fare: 6280,
+    surge_multiplier: 1.00,
+    rationale: 'Optimal planned domestic travel window (Median cluster)'
+  },
+  {
+    lead_window: 'T+30',
+    lead_days: 30,
+    empirical_weight_beta: 0.15,
+    avg_fare: 5520,
+    surge_multiplier: 0.88,
+    rationale: 'Early vacation & planned family travel'
+  },
+  {
+    lead_window: 'T+45',
+    lead_days: 45,
+    empirical_weight_beta: 0.10,
+    avg_fare: 5140,
+    surge_multiplier: 0.82,
+    rationale: 'Deep advance leisure & festival calendar bookings'
+  }
+];
+
+export const SAMPLE_QUOTES: FareQuote[] = [
+  {
+    quote_id: 'q-6e-201',
+    source_platform: 'IndiGo_Direct',
+    carrier: 'IndiGo',
+    flight_number: '6E-2051',
+    route_id: 'DEL-BOM',
+    departure_time: '06:15 IST',
+    lead_window_days: 7,
+    fare_class: 'Economy',
+    base_fare: 5320,
+    fuel_surcharge: 450,
+    taxes_and_fees: 1116,
+    total_fare: 6886,
+    seats_remaining: 3,
+    is_outlier: false,
+    scraping_method: 'SELENIUM'
+  },
+  {
+    quote_id: 'q-ai-805',
+    source_platform: 'AirIndia_Direct',
+    carrier: 'Air India',
+    flight_number: 'AI-805',
+    route_id: 'DEL-BOM',
+    departure_time: '08:30 IST',
+    lead_window_days: 7,
+    fare_class: 'Economy',
+    base_fare: 5680,
+    fuel_surcharge: 450,
+    taxes_and_fees: 1134,
+    total_fare: 7264,
+    seats_remaining: 8,
+    is_outlier: false,
+    scraping_method: 'SELENIUM'
+  },
+  {
+    quote_id: 'q-qp-1102',
+    source_platform: 'CDP_Console_Sniffed_JSON',
+    carrier: 'Akasa Air',
+    flight_number: 'QP-1102',
+    route_id: 'DEL-BOM',
+    departure_time: '11:45 IST',
+    lead_window_days: 7,
+    fare_class: 'Economy',
+    base_fare: 4950,
+    fuel_surcharge: 450,
+    taxes_and_fees: 1098,
+    total_fare: 6498,
+    seats_remaining: 5,
+    is_outlier: false,
+    scraping_method: 'CDP_INTERCEPT',
+    cdp_stream_id: 'CDP_NET_INTERCEPT_601'
+  },
+  {
+    quote_id: 'q-sg-8169',
+    source_platform: 'MakeMyTrip_OTA',
+    carrier: 'SpiceJet',
+    flight_number: 'SG-8169',
+    route_id: 'DEL-BOM',
+    departure_time: '14:20 IST',
+    lead_window_days: 7,
+    fare_class: 'Economy',
+    base_fare: 5080,
+    fuel_surcharge: 450,
+    taxes_and_fees: 1104,
+    total_fare: 6634,
+    seats_remaining: 2,
+    is_outlier: false,
+    scraping_method: 'SCRAPY'
+  },
+  {
+    quote_id: 'q-biz-anomaly',
+    source_platform: 'IndiGo_Direct',
+    carrier: 'IndiGo (Stretch / Biz Anomaly)',
+    flight_number: '6E-601',
+    route_id: 'DEL-BOM',
+    departure_time: '18:30 IST',
+    lead_window_days: 7,
+    fare_class: 'Business/Flexi',
+    base_fare: 22500,
+    fuel_surcharge: 450,
+    taxes_and_fees: 2125,
+    total_fare: 25075,
+    seats_remaining: 1,
+    is_outlier: true,
+    scraping_method: 'SELENIUM'
+  }
+];
+
+export const INITIAL_DECOMPOSITION: FactorDecomposition = {
+  total_delta_pts: 2.42,
+  atf_fuel_impact: 1.18,
+  festival_demand_impact: 0.95,
+  lead_time_shift_impact: 0.22,
+  residual_noise: 0.07,
+  policy_summary: 'Headline APIx climbed +2.42 points. Domestic jet fuel (IOCL ATF) price revision accounts for 48.7% of the surge (+1.18 pts), while upcoming festival pre-booking added +0.95 pts.'
+};

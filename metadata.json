@@ -1,0 +1,6 @@
+{
+  "name": "APIx-India: Airfare Price Index Engine",
+  "description": "Real-Time Airfare Price Index (APIx) prototype for MoSPI/RBI CPI augmentation with automated scraping, CDP fallback, econometric modeling, and Render/PostgreSQL deployment.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
